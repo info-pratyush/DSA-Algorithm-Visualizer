@@ -4,8 +4,15 @@ const container = document.getElementById("array-container");
 const generateButton = document.getElementById("generate-btn");
 const startButton = document.getElementById("start-btn");
 
+let sortedCount = 0;
+let isSorting = false;
 
-function renderArray(sortedCount = 0) {
+
+// -----------------------------
+// Render Array
+// -----------------------------
+
+function renderArray() {
 
     container.innerHTML = "";
 
@@ -23,7 +30,7 @@ function renderArray(sortedCount = 0) {
 
         bar.textContent = array[i];
 
-        // Mark the right-side sorted section
+        // Mark the sorted section
         if (i >= array.length - sortedCount) {
             bar.classList.add("sorted");
         }
@@ -32,95 +39,167 @@ function renderArray(sortedCount = 0) {
     }
 }
 
+
+// -----------------------------
+// Generate Random Array
+// -----------------------------
+
 function generateArray() {
+
+    if (isSorting) {
+        return;
+    }
 
     array = [];
 
     for (let i = 0; i < 5; i++) {
 
-        let randomValue = Math.floor(Math.random() * 35) + 5;
+        const randomValue =
+            Math.floor(Math.random() * 35) + 5;
 
         array.push(randomValue);
     }
 
-// Display the initial array
-renderArray();
+    sortedCount = 0;
+
+    renderArray();
 }
 
-function delay(ms){
-    return new Promise(resolve => setTimeout(resolve, ms));
+
+// -----------------------------
+// Delay Function
+// -----------------------------
+
+function delay(ms) {
+
+    return new Promise(resolve => {
+        setTimeout(resolve, ms);
+    });
 }
+
+
+// -----------------------------
+// Bubble Sort Visualization
+// -----------------------------
 
 async function bubbleSortVisualization() {
+
+    if (isSorting) {
+        return;
+    }
+
+    isSorting = true;
 
     startButton.disabled = true;
     generateButton.disabled = true;
 
-    //const bars = container.children;
+    sortedCount = 0;
 
+    renderArray();
+
+
+    // Bubble Sort
     for (let i = 0; i < array.length; i++) {
+
+        let swapped = false;
+
 
         for (let j = 0; j < array.length - i - 1; j++) {
 
             let bars = container.children;
 
-            // Highlight the two bars being compared
+
+            // Highlight comparison
             bars[j].classList.add("comparing");
             bars[j + 1].classList.add("comparing");
 
-            await delay(700);
+            await delay(600);
 
-             // Check if a swap is needed
+
+            // Compare values
             if (array[j] > array[j + 1]) {
 
-                // Swap values in the array
+                swapped = true;
+
+                // Remove comparison highlight
+                bars[j].classList.remove("comparing");
+                bars[j + 1].classList.remove("comparing");
+
+                // Swap values in array
                 let temp = array[j];
 
                 array[j] = array[j + 1];
 
                 array[j + 1] = temp;
 
-                // Re-render the bars
-                renderArray(i);
 
-                // Update bars reference
-                //bars[j].classList.add("swapping");
-                //bars[j + 1].classList.add("swapping");
+                // Show swapping state
+                bars[j].classList.add("swapping");
+                bars[j + 1].classList.add("swapping");
 
-                await delay(500); // show new state
+                await delay(300);
+
+
+                // Redraw
+                renderArray();
+
+                await delay(300);
+
+            } else {
+
+                // No swap
+                bars[j].classList.remove("comparing");
+                bars[j + 1].classList.remove("comparing");
             }
-
-            // Get current bars again
-            bars = container.children;
-
-            // Remove comparison styling
-            bars[j].classList.remove("comparing");
-            bars[j + 1].classList.remove("comparing");
-
-            // Remove swapping styling
-           // bars[j].classList.remove("swapping");
-            //bars[j + 1].classList.remove("swapping");
-
-            
         }
-        
-        // The largest unsorted element is now in its final position
-        let sortedIndex = array.length - i - 1;
 
-        let bars = container.children;
 
-        bars[sortedIndex].classList.add("sorted");
+        // One more element is now sorted
+        sortedCount++;
+
+        renderArray();
 
         await delay(500);
-        
+
+
+        // Optimization:
+        // If no swaps occurred, array is already sorted.
+        if (!swapped) {
+            break;
+        }
     }
+
+
+    // Make sure every element is marked sorted
+    sortedCount = array.length;
+
+    renderArray();
+
+
+    isSorting = false;
 
     startButton.disabled = false;
     generateButton.disabled = false;
-}    
+}
 
-generateButton.addEventListener("click", generateArray);
-startButton.addEventListener("click", bubbleSortVisualization);
+
+// -----------------------------
+// Button Events
+// -----------------------------
+
+generateButton.addEventListener(
+    "click",
+    generateArray
+);
+
+startButton.addEventListener(
+    "click",
+    bubbleSortVisualization
+);
+
+
+// -----------------------------
+// Initial Display
+// -----------------------------
 
 renderArray();
-
