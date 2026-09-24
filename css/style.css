@@ -72,6 +72,7 @@ header h1{
   padding: 20px;
   background: white;
   border-radius: 10px;
+  overflow: hidden;
 }
 
 .controls{
@@ -85,4 +86,25 @@ header h1{
   border-radius: 5px;
   cursor: pointer;
 
+}
+
+.bar {
+  width: 45px;
+  background: #3b82f6;
+  color: white;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 8px;
+  border-radius: 5px 5px 0 0;
+  font-weight: bold;
+}
+
+.bar.comparing{
+  background: #f59e0b;
+  transform: translateY(-10px);
+}
+
+.bar.sorted{
+  background: #22c55e;
 }
