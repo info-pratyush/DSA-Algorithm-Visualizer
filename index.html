@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DSA Algorithm Visualiser</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
+
 <body class="dark-theme">
   <!-- Short DSA Loading Screen -->
   <div id="loading-screen" class="loading-screen" aria-hidden="true">
@@ -19,18 +21,16 @@
 
   <header class="app-header">
     <div class="header-brand">
-      <div class="brand-badge">LAB</div>
+
       <div>
         <h1>DSA Algorithm Visualiser</h1>
-        <p>Interactive Computer Science Simulation Laboratory</p>
+
       </div>
     </div>
     <div class="header-actions">
-      <div class="creator-badge">
-        <span class="creator-name">Pratyush Kumar</span>
-        <span class="creator-dept">B.Tech CSE (AI/ML)</span>
-      </div>
-      <button id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle visual theme" title="Toggle Light/Dark Mode">
+
+      <button id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle visual theme"
+        title="Toggle Light/Dark Mode">
         <span class="theme-icon">☀️</span>
         <span class="theme-label">Light Mode</span>
       </button>
@@ -42,7 +42,7 @@
       <div class="sidebar-header">
         <h2>Algorithms</h2>
       </div>
-      
+
       <div class="algo-category">
         <h3>Sorting</h3>
         <button class="algo-btn active" data-algorithm="bubble">Bubble Sort</button>
@@ -84,22 +84,29 @@
       </div>
 
       <div id="array-container" class="array-container" aria-label="Algorithm visualization"></div>
-      
+
       <div id="graph-container" class="graph-container hidden">
         <div class="graph-toolbar">
           <div class="graph-toolbar-group">
             <span class="toolbar-label">Edit Mode:</span>
-            <button type="button" class="graph-tool-btn active" id="tool-drag" data-mode="drag" title="Drag nodes to rearrange">✋ Move</button>
-            <button type="button" class="graph-tool-btn" id="tool-add-node" data-mode="add-node" title="Click canvas to place a new node">+ Node</button>
-            <button type="button" class="graph-tool-btn" id="tool-add-edge" data-mode="add-edge" title="Click two nodes to connect them">+ Edge</button>
-            <button type="button" class="graph-tool-btn" id="tool-delete" data-mode="delete" title="Click a node or edge to delete it">🗑 Delete</button>
-            <button type="button" class="graph-tool-btn" id="tool-set-start" data-mode="set-start" title="Click a node to set as Start">★ Set Start</button>
+            <button type="button" class="graph-tool-btn active" id="tool-drag" data-mode="drag"
+              title="Drag nodes to rearrange">✋ Move</button>
+            <button type="button" class="graph-tool-btn" id="tool-add-node" data-mode="add-node"
+              title="Click canvas to place a new node">+ Node</button>
+            <button type="button" class="graph-tool-btn" id="tool-add-edge" data-mode="add-edge"
+              title="Click two nodes to connect them">+ Edge</button>
+            <button type="button" class="graph-tool-btn" id="tool-delete" data-mode="delete"
+              title="Click a node or edge to delete it">🗑 Delete</button>
+            <button type="button" class="graph-tool-btn" id="tool-set-start" data-mode="set-start"
+              title="Click a node to set as Start">★ Set Start</button>
           </div>
           <div class="graph-toolbar-group">
             <label for="graph-start-select" class="toolbar-label">Start Node:</label>
             <select id="graph-start-select" class="graph-select"></select>
-            <button type="button" class="graph-action-btn" id="graph-random-btn" title="Generate a new random connected graph">🎲 Randomize</button>
-            <button type="button" class="graph-action-btn" id="graph-clear-btn" title="Reset to default graph">↺ Default Graph</button>
+            <button type="button" class="graph-action-btn" id="graph-random-btn"
+              title="Generate a new random connected graph">🎲 Randomize</button>
+            <button type="button" class="graph-action-btn" id="graph-clear-btn" title="Reset to default graph">↺ Default
+              Graph</button>
           </div>
         </div>
 
@@ -168,7 +175,7 @@
           <div class="complexity" id="complexity"></div>
         </div>
         <p id="info-description"></p>
-        
+
         <div class="info-grid">
           <div class="info-block">
             <h3>How It Works</h3>
@@ -185,4 +192,5 @@
 
   <script src="js/script.js"></script>
 </body>
+
 </html>
