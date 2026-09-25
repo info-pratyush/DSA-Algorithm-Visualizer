@@ -40,7 +40,54 @@
       </div>
 
       <div id="array-container" aria-label="Algorithm visualization"></div>
-      <div id="graph-container" class="graph-container hidden"></div>
+      
+      <div id="graph-container" class="graph-container hidden">
+        <div class="graph-toolbar">
+          <div class="graph-toolbar-group">
+            <span class="toolbar-label">Edit Mode:</span>
+            <button type="button" class="graph-tool-btn active" id="tool-drag" data-mode="drag" title="Drag nodes to rearrange">✋ Move</button>
+            <button type="button" class="graph-tool-btn" id="tool-add-node" data-mode="add-node" title="Click canvas to place a new node">+ Node</button>
+            <button type="button" class="graph-tool-btn" id="tool-add-edge" data-mode="add-edge" title="Click two nodes to connect them">+ Edge</button>
+            <button type="button" class="graph-tool-btn" id="tool-delete" data-mode="delete" title="Click a node or edge to delete it">🗑 Delete</button>
+            <button type="button" class="graph-tool-btn" id="tool-set-start" data-mode="set-start" title="Click a node to set as Start">★ Set Start</button>
+          </div>
+          <div class="graph-toolbar-group">
+            <label for="graph-start-select" class="toolbar-label">Start Node:</label>
+            <select id="graph-start-select" class="graph-select"></select>
+            <button type="button" class="graph-action-btn" id="graph-random-btn" title="Generate a new random connected graph">🎲 Randomize</button>
+            <button type="button" class="graph-action-btn" id="graph-clear-btn" title="Reset to default graph">↺ Default Graph</button>
+          </div>
+        </div>
+
+        <div id="graph-hint" class="graph-hint">Mode: Move & Drag nodes around the canvas. Click "Start Visualization" to run.</div>
+
+        <div class="graph-svg-wrapper">
+          <svg id="graph-svg" viewBox="0 0 800 440" preserveAspectRatio="xMidYMid meet">
+            <defs>
+              <filter id="node-glow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="4" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+            </defs>
+            <g id="svg-edges"></g>
+            <g id="svg-temp-edge"></g>
+            <g id="svg-nodes"></g>
+          </svg>
+        </div>
+
+        <div class="graph-legend">
+          <div class="legend-item"><span class="legend-dot dot-current"></span> Current</div>
+          <div class="legend-item"><span class="legend-dot dot-exploring"></span> Exploring</div>
+          <div class="legend-item"><span class="legend-dot dot-queued"></span> Queued</div>
+          <div class="legend-item"><span class="legend-dot dot-visited"></span> Visited</div>
+          <div class="legend-item"><span class="legend-line line-traversed"></span> Traversed Edge</div>
+          <div class="legend-item"><span class="legend-dot dot-start"></span> Start Node</div>
+          <div class="legend-item"><span class="legend-dot dot-normal"></span> Normal Node</div>
+        </div>
+      </div>
 
       <div class="controls">
         <button id="generate-btn">Generate Data</button>
@@ -67,9 +114,9 @@
       </div>
 
       <div class="stats">
-        <div><span>Comparisons</span><strong id="comparisons">0</strong></div>
-        <div><span>Swaps</span><strong id="swaps">0</strong></div>
-        <div><span>Passes / Steps</span><strong id="passes">0</strong></div>
+        <div><span id="stat-1-title">Comparisons</span><strong id="comparisons">0</strong></div>
+        <div><span id="stat-2-title">Swaps</span><strong id="swaps">0</strong></div>
+        <div><span id="stat-3-title">Passes / Steps</span><strong id="passes">0</strong></div>
       </div>
 
       <div class="algorithm-info">
