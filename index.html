@@ -1,33 +1,77 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DSA Algorithm Visualizer</title>
+  <title>DSA Algorithm Visualiser</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
-<body>
-  <header>
-    <div>
-      <h1>DSA Algorithm Visualizer</h1>
-      <p>Learn, understand and visualize algorithms</p>
+<body class="dark-theme">
+  <!-- Short DSA Loading Screen -->
+  <div id="loading-screen" class="loading-screen" aria-hidden="true">
+    <div class="loader-content">
+      <div class="dsa-glyph">
+        <span></span><span></span><span></span><span></span><span></span>
+      </div>
+      <div class="loader-title">DSA LAB</div>
+    </div>
+  </div>
+
+  <header class="app-header">
+    <div class="header-brand">
+      <div class="brand-badge">LAB</div>
+      <div>
+        <h1>DSA Algorithm Visualiser</h1>
+        <p>Interactive Computer Science Simulation Laboratory</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <div class="creator-badge">
+        <span class="creator-name">Pratyush Kumar</span>
+        <span class="creator-dept">B.Tech CSE (AI/ML)</span>
+      </div>
+      <button id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle visual theme" title="Toggle Light/Dark Mode">
+        <span class="theme-icon">☀️</span>
+        <span class="theme-label">Light Mode</span>
+      </button>
     </div>
   </header>
 
   <main class="dashboard">
     <aside class="sidebar">
-      <h2>Algorithms</h2>
-      <h3>Sorting</h3>
-      <button class="algo-btn active" data-algorithm="bubble">Bubble Sort</button>
-      <button class="algo-btn" data-algorithm="selection">Selection Sort</button>
-      <button class="algo-btn" data-algorithm="insertion">Insertion Sort</button>
-      <h3>Searching</h3>
-      <button class="algo-btn" data-algorithm="linear">Linear Search</button>
-      <button class="algo-btn" data-algorithm="binary">Binary Search</button>
-      <h3>Graphs</h3>
-      <button class="algo-btn" data-algorithm="bfs">BFS</button>
-      <button class="algo-btn" data-algorithm="dfs">DFS</button>
-      <div class="sidebar-tip">Tip: choose an algorithm, generate data, then start the visualization.</div>
+      <div class="sidebar-header">
+        <h2>Algorithms</h2>
+      </div>
+      
+      <div class="algo-category">
+        <h3>Sorting</h3>
+        <button class="algo-btn active" data-algorithm="bubble">Bubble Sort</button>
+        <button class="algo-btn" data-algorithm="selection">Selection Sort</button>
+        <button class="algo-btn" data-algorithm="insertion">Insertion Sort</button>
+        <button class="algo-btn" data-algorithm="merge">Merge Sort</button>
+        <button class="algo-btn" data-algorithm="quick">Quick Sort</button>
+        <button class="algo-btn" data-algorithm="heap">Heap Sort</button>
+        <button class="algo-btn" data-algorithm="counting">Counting Sort</button>
+      </div>
+
+      <div class="algo-category">
+        <h3>Searching</h3>
+        <button class="algo-btn" data-algorithm="linear">Linear Search</button>
+        <button class="algo-btn" data-algorithm="binary">Binary Search</button>
+      </div>
+
+      <div class="algo-category">
+        <h3>Graphs</h3>
+        <button class="algo-btn" data-algorithm="bfs">BFS</button>
+        <button class="algo-btn" data-algorithm="dfs">DFS</button>
+      </div>
+
+      <div class="sidebar-footer">
+        <div class="creator-credit">
+          <span>Created by <strong>Pratyush Kumar</strong></span>
+          <span class="credit-sub">B.Tech CSE (AI/ML)</span>
+        </div>
+      </div>
     </aside>
 
     <section class="visualizer">
@@ -39,7 +83,7 @@
         <div id="status-badge" class="status-badge">Ready</div>
       </div>
 
-      <div id="array-container" aria-label="Algorithm visualization"></div>
+      <div id="array-container" class="array-container" aria-label="Algorithm visualization"></div>
       
       <div id="graph-container" class="graph-container hidden">
         <div class="graph-toolbar">
@@ -59,7 +103,7 @@
           </div>
         </div>
 
-        <div id="graph-hint" class="graph-hint">Mode: Move & Drag nodes around the canvas. Click "Start Visualization" to run.</div>
+        <div id="graph-hint" class="graph-hint">Mode: Move & Drag nodes around the canvas. Click "Start" to run.</div>
 
         <div class="graph-svg-wrapper">
           <svg id="graph-svg" viewBox="0 0 800 440" preserveAspectRatio="xMidYMid meet">
@@ -90,20 +134,19 @@
       </div>
 
       <div class="controls">
-        <button id="generate-btn">Generate Data</button>
-        <button id="start-btn">Start Visualization</button>
-        <button id="pause-btn">Pause</button>
-        <button id="prev-btn">← Step Back</button>
-        <button id="next-btn">Step Forward →</button>
-        <button id="reset-btn">Reset</button>
+        <button id="generate-btn" class="ctrl-btn">Generate</button>
+        <button id="start-btn" class="ctrl-btn primary">Start</button>
+        <button id="pause-btn" class="ctrl-btn warning">Pause</button>
+        <button id="next-btn" class="ctrl-btn">Step</button>
+        <button id="reset-btn" class="ctrl-btn">Reset</button>
         <div id="search-input-wrap" class="search-input-wrap hidden">
           <label for="search-value">Target</label>
           <input id="search-value" type="number" min="1" max="50" value="8">
         </div>
         <div class="speed-control">
           <label for="speed">Animation Delay</label>
-          <input type="range" id="speed" min="100" max="1000" value="500" step="100">
-          <span id="speed-value">500 ms</span>
+          <input type="range" id="speed" min="50" max="1000" value="450" step="50">
+          <span id="speed-value">450 ms</span>
         </div>
       </div>
 
@@ -115,19 +158,27 @@
 
       <div class="stats">
         <div><span id="stat-1-title">Comparisons</span><strong id="comparisons">0</strong></div>
-        <div><span id="stat-2-title">Swaps</span><strong id="swaps">0</strong></div>
+        <div><span id="stat-2-title">Swaps / Writes</span><strong id="swaps">0</strong></div>
         <div><span id="stat-3-title">Passes / Steps</span><strong id="passes">0</strong></div>
       </div>
 
       <div class="algorithm-info">
-        <h2 id="info-title">Bubble Sort</h2>
+        <div class="info-header-row">
+          <h2 id="info-title">Bubble Sort</h2>
+          <div class="complexity" id="complexity"></div>
+        </div>
         <p id="info-description"></p>
-        <h3>How It Works</h3>
-        <ol id="info-steps"></ol>
-        <h3>Pseudocode</h3>
-        <pre class="pseudocode"><code id="info-pseudocode"></code></pre>
-        <h3>Complexity</h3>
-        <div class="complexity" id="complexity"></div>
+        
+        <div class="info-grid">
+          <div class="info-block">
+            <h3>How It Works</h3>
+            <ol id="info-steps"></ol>
+          </div>
+          <div class="info-block">
+            <h3>Pseudocode</h3>
+            <pre class="pseudocode"><code id="info-pseudocode"></code></pre>
+          </div>
+        </div>
       </div>
     </section>
   </main>

@@ -13,7 +13,6 @@ const graphToolButtons = [...document.querySelectorAll(".graph-tool-btn")];
 const generateButton = document.getElementById("generate-btn");
 const startButton = document.getElementById("start-btn");
 const pauseButton = document.getElementById("pause-btn");
-const prevButton = document.getElementById("prev-btn");
 const nextButton = document.getElementById("next-btn");
 const resetButton = document.getElementById("reset-btn");
 
@@ -43,16 +42,18 @@ const stat1Title = document.getElementById("stat-1-title");
 const stat2Title = document.getElementById("stat-2-title");
 const stat3Title = document.getElementById("stat-3-title");
 
+const themeToggleBtn = document.getElementById("theme-toggle");
 const algoButtons = [...document.querySelectorAll(".algo-btn")];
 
 let array = [5, 3, 8, 4, 2, 9, 7, 1, 6, 10];
 let currentAlgorithm = "bubble";
-let animationSpeed = 500;
+let animationSpeed = 450;
 let isPlaying = false;
 let frames = [];
 let frameIndex = 0;
 let comparisons = 0, swaps = 0, passes = 0;
 
+// Graph state
 const DEFAULT_GRAPH_NODES = [
   { id: 0, label: "A", x: 130, y: 160 },
   { id: 1, label: "B", x: 270, y: 85 },
@@ -84,71 +85,269 @@ let draggingNodeId = null;
 let dragOffset = { x: 0, y: 0 };
 let hasMovedDuringDrag = false;
 
-const algorithms={
- bubble:{name:"Bubble Sort",desc:"Bubble Sort repeatedly compares adjacent elements and swaps them when they are in the wrong order. Larger elements gradually move toward the end.",
-
-  steps:["Compare two adjacent elements.","Swap them if the left value is greater.","Continue across the unsorted part of the array.","After a pass, the largest remaining value is in its final position.","Repeat until no swaps are needed."],
-  
-  code:["for i = 0 to n - 1","    swapped = false","    for j = 0 to n - i - 2","        if A[j] > A[j + 1]","            swap(A[j], A[j + 1])","            swapped = true","    if swapped == false","        break"],
-  
-  cx:["O(n)","O(n²)","O(n²)","O(1)"]
-},
- 
-selection:{name:"Selection Sort",desc:"Selection Sort repeatedly finds the smallest value in the unsorted portion and places it at the next sorted position.",
-  
-  steps:["Start at the first unsorted position.","Find the minimum value in the remaining array.","Swap the minimum with the first unsorted position.","Move the boundary one position right.","Repeat until the whole array is sorted."],
-  
-  code:["for i = 0 to n - 2","    minIndex = i","    for j = i + 1 to n - 1","        if A[j] < A[minIndex]","            minIndex = j","    swap(A[i], A[minIndex])"],
-  
-  cx:["O(n²)","O(n²)","O(n²)","O(1)"]
-},
-
- insertion:{name:"Insertion Sort",desc:"Insertion Sort builds a sorted section from left to right by inserting each new value into its correct position.",
-  
-  steps:["Treat the first element as sorted.","Take the next element as the key.","Shift larger sorted elements one position right.","Insert the key into the open position.","Repeat for every remaining element."],
-  
-  code:["for i = 1 to n - 1","    key = A[i]","    j = i - 1","    while j >= 0 and A[j] > key","        A[j + 1] = A[j]","        j = j - 1","    A[j + 1] = key"],
-  
-  cx:["O(n)","O(n²)","O(n²)","O(1)"]
-},
-
- linear:{name:"Linear Search",desc:"Linear Search checks elements one by one from left to right until the target is found or the array ends.",
-  
-  steps:["Choose a target value.","Start at index 0.","Compare the current value with the target.","Stop when the target is found.","If the array ends, the target is not present."],
-  
-  code:["for i = 0 to n - 1","    if A[i] == target","        return i","return -1"],
-  
-  cx:["O(1)","O(n)","O(n)","O(1)"]
-},
-
- binary:{name:"Binary Search",desc:"Binary Search finds a target in a sorted array by repeatedly checking the middle element and discarding half of the remaining search space.",
-  
-  steps:["Sort the array first.","Set left and right boundaries.","Check the middle element.","Discard the half that cannot contain the target.","Repeat until found or the search range is empty."],
-  
-  code:["sort(A)","left = 0, right = n - 1","while left <= right","    mid = floor((left + right) / 2)","    if A[mid] == target return mid","    if A[mid] < target left = mid + 1","    else right = mid - 1"],
-  
-  cx:["O(1)","O(log n)","O(log n)","O(1)"]
-},
-
- bfs:{name:"Breadth-First Search (BFS)",desc:"BFS explores a graph level by level. It uses a queue and visits all immediate neighbors before moving farther away.",
-  
-  steps:["Start from the first node.","Mark it visited and put it in a queue.","Remove the front node from the queue.","Visit each unvisited neighbor and enqueue it.","Continue until the queue is empty."],
-  
-  code:["queue = [start]","visited = {start}","while queue is not empty","    node = dequeue(queue)","    for neighbor of node","        if neighbor not in visited","            visit neighbor","            enqueue(neighbor)"],
-  
-  cx:["O(V + E)","O(V + E)","O(V + E)","O(V)"]
-},
-
- dfs:{name:"Depth-First Search (DFS)",desc:"DFS explores as far as possible along one branch before backtracking. It can be implemented using recursion or a stack.",
-  
-  steps:["Start from the first node.","Mark the current node visited.","Choose an unvisited neighbor.","Explore that neighbor deeply before backtracking.","Continue until every reachable node is visited."],
-  
-  code:["DFS(node):","    mark node visited","    for neighbor of node","        if neighbor not visited","            DFS(neighbor)"],
-  
-  cx:["O(V + E)","O(V + E)","O(V + E)","O(V)"]
-}
+const algorithms = {
+  bubble: {
+    name: "Bubble Sort",
+    desc: "Bubble Sort repeatedly compares adjacent elements and swaps them when they are in the wrong order. Larger elements gradually bubble toward the end.",
+    steps: [
+      "Compare two adjacent elements.",
+      "Swap them if the left value is greater than the right value.",
+      "Continue across the unsorted part of the array.",
+      "After each pass, the largest remaining value settles in position.",
+      "Repeat until no swaps occur during a pass."
+    ],
+    code: [
+      "for i = 0 to n - 1",
+      "    swapped = false",
+      "    for j = 0 to n - i - 2",
+      "        if A[j] > A[j + 1]",
+      "            swap(A[j], A[j + 1])",
+      "            swapped = true",
+      "    if swapped == false: break"
+    ],
+    cx: ["O(n)", "O(n²)", "O(n²)", "O(1)"]
+  },
+  selection: {
+    name: "Selection Sort",
+    desc: "Selection Sort repeatedly identifies the minimum element in the unsorted section and places it at the beginning of that section.",
+    steps: [
+      "Start at the current unsorted boundary.",
+      "Scan remaining array to find index of minimum element.",
+      "Swap the minimum element with boundary position.",
+      "Advance boundary index right by one position.",
+      "Repeat until entire array is partitioned as sorted."
+    ],
+    code: [
+      "for i = 0 to n - 2",
+      "    minIndex = i",
+      "    for j = i + 1 to n - 1",
+      "        if A[j] < A[minIndex]: minIndex = j",
+      "    swap(A[i], A[minIndex])"
+    ],
+    cx: ["O(n²)", "O(n²)", "O(n²)", "O(1)"]
+  },
+  insertion: {
+    name: "Insertion Sort",
+    desc: "Insertion Sort builds a sorted array one element at a time by repeatedly taking the next key and inserting it into its correct position among already sorted elements.",
+    steps: [
+      "Treat index 0 as sorted prefix.",
+      "Pick current item as the insertion key.",
+      "Shift larger sorted elements rightward to make space.",
+      "Insert key into the newly vacated slot.",
+      "Repeat for all subsequent array indices."
+    ],
+    code: [
+      "for i = 1 to n - 1",
+      "    key = A[i], j = i - 1",
+      "    while j >= 0 and A[j] > key",
+      "        A[j + 1] = A[j]",
+      "        j = j - 1",
+      "    A[j + 1] = key"
+    ],
+    cx: ["O(n)", "O(n²)", "O(n²)", "O(1)"]
+  },
+  merge: {
+    name: "Merge Sort",
+    desc: "Merge Sort recursively divides the array in half until single elements remain, then merges sorted subarrays back together in order.",
+    steps: [
+      "Divide the array into left and right halves at midpoint.",
+      "Recursively apply Merge Sort to each half.",
+      "Compare front elements of both sorted halves.",
+      "Merge elements in ascending order into temporary buffer.",
+      "Copy sorted elements back into main array slice."
+    ],
+    code: [
+      "mergeSort(A, left, right):",
+      "    if left < right:",
+      "        mid = floor((left + right) / 2)",
+      "        mergeSort(A, left, mid)",
+      "        mergeSort(A, mid + 1, right)",
+      "        merge(A, left, mid, right)"
+    ],
+    cx: ["O(n log n)", "O(n log n)", "O(n log n)", "O(n)"]
+  },
+  quick: {
+    name: "Quick Sort",
+    desc: "Quick Sort selects a pivot element and partitions the array such that all items less than the pivot precede all items greater than it.",
+    steps: [
+      "Choose a pivot value (here, the last element).",
+      "Scan array and partition values relative to pivot.",
+      "Swap pivot into its definitive final sorted position.",
+      "Recursively invoke Quick Sort on left partition.",
+      "Recursively invoke Quick Sort on right partition."
+    ],
+    code: [
+      "quickSort(A, low, high):",
+      "    if low < high:",
+      "        p = partition(A, low, high)",
+      "        quickSort(A, low, p - 1)",
+      "        quickSort(A, p + 1, high)"
+    ],
+    cx: ["O(n log n)", "O(n log n)", "O(n²)", "O(log n)"]
+  },
+  heap: {
+    name: "Heap Sort",
+    desc: "Heap Sort transforms the input into a binary max-heap, then repeatedly extracts the root maximum to the end of the array and sifts down.",
+    steps: [
+      "Construct a Max-Heap where each parent >= children.",
+      "Swap heap root (maximum) with the last element.",
+      "Decrease active heap size by one.",
+      "Sift down new root to restore max-heap property.",
+      "Repeat until all items are moved to sorted tail."
+    ],
+    code: [
+      "buildMaxHeap(A)",
+      "for i = n - 1 down to 1:",
+      "    swap(A[0], A[i])",
+      "    heapify(A, i, 0)"
+    ],
+    cx: ["O(n log n)", "O(n log n)", "O(n log n)", "O(1)"]
+  },
+  counting: {
+    name: "Counting Sort",
+    desc: "Counting Sort tallies frequencies of distinct key values, computes prefix sums for index boundaries, and places keys directly in sorted order.",
+    steps: [
+      "Determine maximum key value across array.",
+      "Initialize count array and record frequencies.",
+      "Compute running cumulative prefix sums.",
+      "Iterate in reverse to place items into output array.",
+      "Copy sorted elements back into input array."
+    ],
+    code: [
+      "count = array of zeros(max + 1)",
+      "for x in A: count[x]++",
+      "for i = 1 to max: count[i] += count[i - 1]",
+      "for x in reverse(A): output[--count[x]] = x",
+      "A = copy(output)"
+    ],
+    cx: ["O(n + k)", "O(n + k)", "O(n + k)", "O(k)"]
+  },
+  linear: {
+    name: "Linear Search",
+    desc: "Linear Search checks elements sequentially from index 0 until the target value is matched or the array ends.",
+    steps: [
+      "Set target search value.",
+      "Inspect current element starting from index 0.",
+      "If element matches target, return current index.",
+      "Otherwise proceed to next index.",
+      "If end reached without match, return not found."
+    ],
+    code: [
+      "for i = 0 to n - 1",
+      "    if A[i] == target: return i",
+      "return -1"
+    ],
+    cx: ["O(1)", "O(n)", "O(n)", "O(1)"]
+  },
+  binary: {
+    name: "Binary Search",
+    desc: "Binary Search repeatedly divides a sorted search interval in half by evaluating the midpoint against the target value.",
+    steps: [
+      "Array must be sorted prior to search.",
+      "Initialize left and right search boundaries.",
+      "Compute midpoint index and inspect value.",
+      "Discard half that cannot contain target.",
+      "Repeat until found or left exceeds right."
+    ],
+    code: [
+      "left = 0, right = n - 1",
+      "while left <= right",
+      "    mid = floor((left + right) / 2)",
+      "    if A[mid] == target return mid",
+      "    if A[mid] < target: left = mid + 1",
+      "    else: right = mid - 1"
+    ],
+    cx: ["O(1)", "O(log n)", "O(log n)", "O(1)"]
+  },
+  bfs: {
+    name: "Breadth-First Search (BFS)",
+    desc: "BFS explores a graph level by level using a FIFO queue, visiting all immediate neighbors before advancing outward.",
+    steps: [
+      "Start from the designated start node.",
+      "Mark it visited and enqueue it.",
+      "Dequeue current front node.",
+      "Visit and enqueue all unvisited neighbors.",
+      "Repeat until queue is empty."
+    ],
+    code: [
+      "queue = [start], visited = {start}",
+      "while queue is not empty:",
+      "    node = dequeue(queue)",
+      "    for neighbor of node:",
+      "        if neighbor not in visited:",
+      "            visit & enqueue(neighbor)"
+    ],
+    cx: ["O(V + E)", "O(V + E)", "O(V + E)", "O(V)"]
+  },
+  dfs: {
+    name: "Depth-First Search (DFS)",
+    desc: "DFS explores deeply along each branch using recursion or a stack before backtracking to unvisited paths.",
+    steps: [
+      "Start from designated start node.",
+      "Push current node to execution call stack.",
+      "Explore first unvisited neighbor deeply.",
+      "Backtrack when all neighbors are visited.",
+      "Repeat until all reachable nodes are visited."
+    ],
+    code: [
+      "DFS(node):",
+      "    mark node visited",
+      "    for neighbor of node:",
+      "        if neighbor not visited:",
+      "            DFS(neighbor)"
+    ],
+    cx: ["O(V + E)", "O(V + E)", "O(V + E)", "O(V)"]
+  }
 };
 
+// -------------------------------------------------------------
+// Theme Management
+// -------------------------------------------------------------
+function initTheme() {
+  const saved = localStorage.getItem("dsa_theme") || "dark";
+  applyTheme(saved);
+}
+
+function applyTheme(theme) {
+  document.documentElement.setAttribute("data-theme", theme);
+  document.body.className = theme === "dark" ? "dark-theme" : "light-theme";
+  localStorage.setItem("dsa_theme", theme);
+  if (themeToggleBtn) {
+    const isDark = theme === "dark";
+    const icon = themeToggleBtn.querySelector(".theme-icon");
+    const label = themeToggleBtn.querySelector(".theme-label");
+    if (icon) icon.textContent = isDark ? "☀️" : "🌙";
+    if (label) label.textContent = isDark ? "Light Mode" : "Dark Mode";
+  }
+}
+
+if (themeToggleBtn) {
+  themeToggleBtn.addEventListener("click", () => {
+    const current = document.documentElement.getAttribute("data-theme") || "dark";
+    const next = current === "dark" ? "light" : "dark";
+    applyTheme(next);
+  });
+}
+
+// -------------------------------------------------------------
+// Loading Screen Dismissal
+// -------------------------------------------------------------
+function dismissLoader() {
+  const loader = document.getElementById("loading-screen");
+  if (loader && !loader.classList.contains("hidden")) {
+    setTimeout(() => {
+      loader.classList.add("hidden");
+    }, 450);
+  }
+}
+window.addEventListener("load", dismissLoader);
+if (document.readyState === "complete") {
+  dismissLoader();
+}
+
+// -------------------------------------------------------------
+// Core Visualizer Helpers
+// -------------------------------------------------------------
 function resetStats() {
   comparisons = 0;
   swaps = 0;
@@ -166,38 +365,39 @@ function passesDisplay() {
   passDisplay.textContent = passes;
 }
 
-function setStatus(text,type=""){
-  statusBadge.textContent=text;
-  statusBadge.className=`status-badge ${type}`
+function setStatus(text, type = "") {
+  statusBadge.textContent = text;
+  statusBadge.className = `status-badge ${type}`;
 }
 
-function randomArray(){
-  return Array.from({length:10},()=>Math.floor(Math.random()*36)+5)
+function randomArray() {
+  return Array.from({ length: 10 }, () => Math.floor(Math.random() * 36) + 5);
 }
 
-function renderArray(frame=frames[frameIndex]){
- container.innerHTML="";
-  if(!array.length)
-    return;
- const values=frame?.array || array;
- const max=Math.max(...values);
- const sorted=frame?.sorted || [];
+function renderArray(frame = frames[frameIndex]) {
+  container.innerHTML = "";
+  if (!array.length) return;
+  const values = frame?.array || array;
+  const max = Math.max(...values);
+  const sorted = frame?.sorted || [];
 
- values.forEach((value,i)=>{const bar=document.createElement("div");
-
-  bar.className="bar";
-  bar.style.height=`${Math.max(25,(value/max)*330)}px`;
-  bar.textContent=value;
-  if(sorted.includes(i))bar.classList.add("sorted");
-  if(frame?.compare?.includes(i))bar.classList.add("comparing");
-  if(frame?.swap?.includes(i))bar.classList.add("swapping");
-  if(frame?.found===i)bar.classList.add("found");
-  if(frame?.failed?.includes(i))bar.classList.add("failed");
-  container.appendChild(bar);
- });
+  values.forEach((value, i) => {
+    const bar = document.createElement("div");
+    bar.className = "bar";
+    bar.style.height = `${Math.max(25, (value / max) * 320)}px`;
+    bar.textContent = value;
+    if (sorted.includes(i)) bar.classList.add("sorted");
+    if (frame?.compare?.includes(i)) bar.classList.add("comparing");
+    if (frame?.swap?.includes(i)) bar.classList.add("swapping");
+    if (frame?.pivot === i) bar.classList.add("pivot");
+    if (frame?.found === i) bar.classList.add("found");
+    if (frame?.failed?.includes(i)) bar.classList.add("failed");
+    container.appendChild(bar);
+  });
 }
+
 // -------------------------------------------------------------
-// Graph Helper Functions
+// Graph Helper Functions (SVG)
 // -------------------------------------------------------------
 function getEdgeKey(u, v) {
   return Math.min(u, v) + "-" + Math.max(u, v);
@@ -274,7 +474,6 @@ function renderGraph(frame = null) {
   const nodeStates = frame?.nodeStates || {};
   const edgeStates = frame?.edgeStates || {};
 
-  // Render edges
   graphEdges.forEach(edge => {
     const uNode = getNode(edge.u);
     const vNode = getNode(edge.v);
@@ -316,7 +515,6 @@ function renderGraph(frame = null) {
     svgEdges.appendChild(line);
   });
 
-  // Render nodes
   graphNodes.forEach(node => {
     const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
     g.setAttribute("class", "graph-node-group");
@@ -612,27 +810,699 @@ function makeFrame(state) {
   return JSON.parse(JSON.stringify(state));
 }
 
-
-function pushFrame(list,state){list.push(makeFrame(state))}
-
-function buildSortFrames(type){
- let a=[...array],list=[];let c=0,s=0,p=0;const sorted=[];pushFrame(list,{array:a,sorted,operation:"Ready — press Start or Step Forward",variables:"—",line:-1,comparisons:c,swaps:s,passes:p});
- if(type==="bubble"){
-  for(let i=0;i<a.length;i++){let swapped=false;for(let j=0;j<a.length-i-1;j++){c++;pushFrame(list,{array:a,sorted:[...Array(i).keys()].map(k=>a.length-1-k),compare:[j,j+1],operation:`Compare ${a[j]} and ${a[j+1]}`,variables:`i = ${i}, j = ${j}`,line:3,comparisons:c,swaps:s,passes:p});if(a[j]>a[j+1]){s++;swapped=true;pushFrame(list,{array:a,sorted:[],swap:[j,j+1],operation:`Swap ${a[j]} and ${a[j+1]}`,variables:`i = ${i}, j = ${j}`,line:4,comparisons:c,swaps:s,passes:p});[a[j],a[j+1]]=[a[j+1],a[j]];pushFrame(list,{array:a,sorted:[],operation:"Array updated after swap",variables:`i = ${i}, j = ${j}`,line:5,comparisons:c,swaps:s,passes:p})}}p++;const done=Array.from({length:i+1},(_,k)=>a.length-1-k);pushFrame(list,{array:a,sorted:done,operation:`Pass ${p} complete`,variables:`i = ${i}`,line:6,comparisons:c,swaps:s,passes:p});if(!swapped)break}
-  pushFrame(list,{array:a,sorted:a.map((_,i)=>i),operation:"Bubble Sort complete",variables:"All elements sorted",line:-1,comparisons:c,swaps:s,passes:p});
- } else if(type==="selection"){
-  for(let i=0;i<a.length-1;i++){let min=i;for(let j=i+1;j<a.length;j++){c++;pushFrame(list,{array:a,sorted:Array.from({length:i},(_,k)=>k),compare:[j,min],operation:`Compare ${a[j]} with current minimum ${a[min]}`,variables:`i = ${i}, j = ${j}, min = ${min}`,line:3,comparisons:c,swaps:s,passes:p});if(a[j]<a[min]){min=j;pushFrame(list,{array:a,sorted:Array.from({length:i},(_,k)=>k),compare:[j],operation:`New minimum found: ${a[min]}`,variables:`i = ${i}, j = ${j}, min = ${min}`,line:4,comparisons:c,swaps:s,passes:p})}}if(min!==i){s++;pushFrame(list,{array:a,sorted:Array.from({length:i},(_,k)=>k),swap:[i,min],operation:`Swap ${a[i]} with minimum ${a[min]}`,variables:`i = ${i}, min = ${min}`,line:5,comparisons:c,swaps:s,passes:p});[a[i],a[min]]=[a[min],a[i]]}p++;pushFrame(list,{array:a,sorted:Array.from({length:i+1},(_,k)=>k),operation:`Position ${i} fixed`,variables:`i = ${i}`,line:5,comparisons:c,swaps:s,passes:p})}pushFrame(list,{array:a,sorted:a.map((_,i)=>i),operation:"Selection Sort complete",variables:"All elements sorted",line:-1,comparisons:c,swaps:s,passes:p})
- } else {
-  for(let i=1;i<a.length;i++){let key=a[i],j=i-1;pushFrame(list,{array:a,sorted:Array.from({length:i},(_,k)=>k),compare:[i],operation:`Pick ${key} as key`,variables:`i = ${i}, key = ${key}, j = ${j}`,line:1,comparisons:c,swaps:s,passes:p});while(j>=0&&a[j]>key){c++;s++;pushFrame(list,{array:a,sorted:Array.from({length:i},(_,k)=>k),compare:[j,i],operation:`Shift ${a[j]} right`,variables:`i = ${i}, key = ${key}, j = ${j}`,line:4,comparisons:c,swaps:s,passes:p});a[j+1]=a[j];j--;pushFrame(list,{array:a,sorted:Array.from({length:i},(_,k)=>k),operation:"Shift applied",variables:`i = ${i}, key = ${key}, j = ${j}`,line:5,comparisons:c,swaps:s,passes:p})}a[j+1]=key;p++;pushFrame(list,{array:a,sorted:Array.from({length:i+1},(_,k)=>k),operation:`Inserted ${key} into sorted section`,variables:`i = ${i}, key = ${key}, j = ${j}`,line:6,comparisons:c,swaps:s,passes:p})}pushFrame(list,{array:a,sorted:a.map((_,i)=>i),operation:"Insertion Sort complete",variables:"All elements sorted",line:-1,comparisons:c,swaps:s,passes:p})
- }
- return list
+function pushFrame(list, state) {
+  list.push(makeFrame(state));
 }
 
+// -------------------------------------------------------------
+// Sorting Algorithms Frame Builders
+// -------------------------------------------------------------
+function buildBubbleSortFrames(a) {
+  let list = [];
+  let c = 0, s = 0, p = 0;
+  pushFrame(list, { array: [...a], sorted: [], operation: "Ready for Bubble Sort", variables: "—", line: -1, comparisons: c, swaps: s, passes: p });
 
-function buildSearchFrames(type){let a=type==="binary"?[...array].sort((x,y)=>x-y):[...array],list=[];let c=0,p=0;const target=Number(searchValue.value);pushFrame(list,{array:a,operation:type==="binary"?"Array sorted for Binary Search":"Ready for Linear Search",variables:`target = ${target}`,line:0,comparisons:c,passes:p});
- if(type==="linear"){for(let i=0;i<a.length;i++){c++;p++;pushFrame(list,{array:a,compare:[i],operation:`Check ${a[i]} against target ${target}`,variables:`i = ${i}, target = ${target}`,line:1,comparisons:c,passes:p});if(a[i]===target){pushFrame(list,{array:a,found:i,operation:`Target ${target} found at index ${i}`,variables:`i = ${i}`,line:2,comparisons:c,passes:p});return list}}pushFrame(list,{array:a,failed:a.map((_,i)=>i),operation:`Target ${target} not found`,variables:`target = ${target}`,line:3,comparisons:c,passes:p});return list}
- let left=0,right=a.length-1;while(left<=right){let mid=Math.floor((left+right)/2);c++;p++;pushFrame(list,{array:a,compare:[mid],operation:`Check middle value ${a[mid]}`,variables:`left = ${left}, mid = ${mid}, right = ${right}`,line:3,comparisons:c,passes:p});if(a[mid]===target){pushFrame(list,{array:a,found:mid,operation:`Target ${target} found at index ${mid}`,variables:`left = ${left}, mid = ${mid}, right = ${right}`,line:4,comparisons:c,passes:p});return list}if(a[mid]<target){left=mid+1;pushFrame(list,{array:a,operation:`Target is larger — move left to ${left}`,variables:`left = ${left}, mid = ${mid}, right = ${right}`,line:5,comparisons:c,passes:p})}else{right=mid-1;pushFrame(list,{array:a,operation:`Target is smaller — move right to ${right}`,variables:`left = ${left}, mid = ${mid}, right = ${right}`,line:6,comparisons:c,passes:p})}}pushFrame(list,{array:a,failed:a.map((_,i)=>i),operation:`Target ${target} not found`,variables:`left = ${left}, right = ${right}`,line:6,comparisons:c,passes:p});return list}
+  for (let i = 0; i < a.length; i++) {
+    let swapped = false;
+    for (let j = 0; j < a.length - i - 1; j++) {
+      c++;
+      pushFrame(list, {
+        array: [...a],
+        sorted: [...Array(i).keys()].map(k => a.length - 1 - k),
+        compare: [j, j + 1],
+        operation: `Compare A[${j}] (${a[j]}) and A[${j + 1}] (${a[j + 1]})`,
+        variables: `i = ${i}, j = ${j}`,
+        line: 3,
+        comparisons: c,
+        swaps: s,
+        passes: p
+      });
+      if (a[j] > a[j + 1]) {
+        s++;
+        swapped = true;
+        [a[j], a[j + 1]] = [a[j + 1], a[j]];
+        pushFrame(list, {
+          array: [...a],
+          sorted: [...Array(i).keys()].map(k => a.length - 1 - k),
+          swap: [j, j + 1],
+          operation: `Swap elements: ${a[j + 1]} > ${a[j]}`,
+          variables: `i = ${i}, j = ${j}`,
+          line: 4,
+          comparisons: c,
+          swaps: s,
+          passes: p
+        });
+      }
+    }
+    p++;
+    const done = Array.from({ length: i + 1 }, (_, k) => a.length - 1 - k);
+    pushFrame(list, {
+      array: [...a],
+      sorted: done,
+      operation: `Pass ${p} complete. Element ${a[a.length - 1 - i]} locked.`,
+      variables: `Pass ${p}`,
+      line: 6,
+      comparisons: c,
+      swaps: s,
+      passes: p
+    });
+    if (!swapped) break;
+  }
+  pushFrame(list, { array: [...a], sorted: a.map((_, i) => i), operation: "Bubble Sort complete", variables: "All elements sorted", line: -1, comparisons: c, swaps: s, passes: p });
+  return list;
+}
 
+function buildSelectionSortFrames(a) {
+  let list = [];
+  let c = 0, s = 0, p = 0;
+  pushFrame(list, { array: [...a], sorted: [], operation: "Ready for Selection Sort", variables: "—", line: -1, comparisons: c, swaps: s, passes: p });
+
+  for (let i = 0; i < a.length - 1; i++) {
+    let min = i;
+    for (let j = i + 1; j < a.length; j++) {
+      c++;
+      pushFrame(list, {
+        array: [...a],
+        sorted: Array.from({ length: i }, (_, k) => k),
+        compare: [j, min],
+        operation: `Compare A[${j}] (${a[j]}) with current min A[${min}] (${a[min]})`,
+        variables: `i = ${i}, j = ${j}, minIndex = ${min}`,
+        line: 3,
+        comparisons: c,
+        swaps: s,
+        passes: p
+      });
+      if (a[j] < a[min]) {
+        min = j;
+        pushFrame(list, {
+          array: [...a],
+          sorted: Array.from({ length: i }, (_, k) => k),
+          compare: [j],
+          operation: `New minimum detected: ${a[min]} at index ${min}`,
+          variables: `minIndex = ${min}`,
+          line: 4,
+          comparisons: c,
+          swaps: s,
+          passes: p
+        });
+      }
+    }
+    if (min !== i) {
+      s++;
+      [a[i], a[min]] = [a[min], a[i]];
+      pushFrame(list, {
+        array: [...a],
+        sorted: Array.from({ length: i }, (_, k) => k),
+        swap: [i, min],
+        operation: `Swap minimum ${a[i]} into position ${i}`,
+        variables: `Swapped A[${i}] and A[${min}]`,
+        line: 5,
+        comparisons: c,
+        swaps: s,
+        passes: p
+      });
+    }
+    p++;
+    pushFrame(list, {
+      array: [...a],
+      sorted: Array.from({ length: i + 1 }, (_, k) => k),
+      operation: `Position ${i} fixed with ${a[i]}`,
+      variables: `i = ${i}`,
+      line: 5,
+      comparisons: c,
+      swaps: s,
+      passes: p
+    });
+  }
+  pushFrame(list, { array: [...a], sorted: a.map((_, i) => i), operation: "Selection Sort complete", variables: "All elements sorted", line: -1, comparisons: c, swaps: s, passes: p });
+  return list;
+}
+
+function buildInsertionSortFrames(a) {
+  let list = [];
+  let c = 0, s = 0, p = 0;
+  pushFrame(list, { array: [...a], sorted: [0], operation: "Ready for Insertion Sort", variables: "—", line: -1, comparisons: c, swaps: s, passes: p });
+
+  for (let i = 1; i < a.length; i++) {
+    let key = a[i], j = i - 1;
+    pushFrame(list, {
+      array: [...a],
+      sorted: Array.from({ length: i }, (_, k) => k),
+      compare: [i],
+      operation: `Select key = ${key} at index ${i}`,
+      variables: `key = ${key}, i = ${i}`,
+      line: 1,
+      comparisons: c,
+      swaps: s,
+      passes: p
+    });
+    while (j >= 0 && a[j] > key) {
+      c++;
+      s++;
+      pushFrame(list, {
+        array: [...a],
+        sorted: Array.from({ length: i }, (_, k) => k),
+        compare: [j, i],
+        operation: `Shift ${a[j]} rightwards (${a[j]} > ${key})`,
+        variables: `A[${j + 1}] = A[${j}]`,
+        line: 4,
+        comparisons: c,
+        swaps: s,
+        passes: p
+      });
+      a[j + 1] = a[j];
+      j--;
+    }
+    a[j + 1] = key;
+    p++;
+    pushFrame(list, {
+      array: [...a],
+      sorted: Array.from({ length: i + 1 }, (_, k) => k),
+      swap: [j + 1],
+      operation: `Inserted key ${key} into slot ${j + 1}`,
+      variables: `A[${j + 1}] = ${key}`,
+      line: 6,
+      comparisons: c,
+      swaps: s,
+      passes: p
+    });
+  }
+  pushFrame(list, { array: [...a], sorted: a.map((_, i) => i), operation: "Insertion Sort complete", variables: "All elements sorted", line: -1, comparisons: c, swaps: s, passes: p });
+  return list;
+}
+
+function buildMergeSortFrames(initialArray) {
+  let a = [...initialArray];
+  let list = [];
+  let c = 0, s = 0, p = 0;
+  pushFrame(list, { array: [...a], sorted: [], operation: "Ready for Merge Sort", variables: "Divide and conquer", line: 0, comparisons: c, swaps: s, passes: p });
+
+  function merge(low, mid, high) {
+    p++;
+    let leftSub = a.slice(low, mid + 1);
+    let rightSub = a.slice(mid + 1, high + 1);
+    let i = 0, j = 0, k = low;
+
+    pushFrame(list, {
+      array: [...a],
+      compare: [mid, mid + 1],
+      operation: `Merge subarrays [${low}..${mid}] and [${mid + 1}..${high}]`,
+      variables: `Left: [${leftSub.join(", ")}], Right: [${rightSub.join(", ")}]`,
+      line: 5,
+      comparisons: c,
+      swaps: s,
+      passes: p
+    });
+
+    while (i < leftSub.length && j < rightSub.length) {
+      c++;
+      pushFrame(list, {
+        array: [...a],
+        compare: [low + i, mid + 1 + j],
+        operation: `Compare ${leftSub[i]} with ${rightSub[j]}`,
+        variables: `Left[${i}]=${leftSub[i]}, Right[${j}]=${rightSub[j]}`,
+        line: 5,
+        comparisons: c,
+        swaps: s,
+        passes: p
+      });
+
+      if (leftSub[i] <= rightSub[j]) {
+        s++;
+        a[k] = leftSub[i];
+        pushFrame(list, {
+          array: [...a],
+          swap: [k],
+          operation: `Write ${leftSub[i]} into index ${k}`,
+          variables: `A[${k}] = ${leftSub[i]}`,
+          line: 5,
+          comparisons: c,
+          swaps: s,
+          passes: p
+        });
+        i++;
+      } else {
+        s++;
+        a[k] = rightSub[j];
+        pushFrame(list, {
+          array: [...a],
+          swap: [k],
+          operation: `Write ${rightSub[j]} into index ${k}`,
+          variables: `A[${k}] = ${rightSub[j]}`,
+          line: 5,
+          comparisons: c,
+          swaps: s,
+          passes: p
+        });
+        j++;
+      }
+      k++;
+    }
+
+    while (i < leftSub.length) {
+      s++;
+      a[k] = leftSub[i];
+      pushFrame(list, {
+        array: [...a],
+        swap: [k],
+        operation: `Copy remaining left item ${leftSub[i]} to index ${k}`,
+        variables: `A[${k}] = ${leftSub[i]}`,
+        line: 5,
+        comparisons: c,
+        swaps: s,
+        passes: p
+      });
+      i++;
+      k++;
+    }
+
+    while (j < rightSub.length) {
+      s++;
+      a[k] = rightSub[j];
+      pushFrame(list, {
+        array: [...a],
+        swap: [k],
+        operation: `Copy remaining right item ${rightSub[j]} to index ${k}`,
+        variables: `A[${k}] = ${rightSub[j]}`,
+        line: 5,
+        comparisons: c,
+        swaps: s,
+        passes: p
+      });
+      j++;
+      k++;
+    }
+  }
+
+  function sort(low, high) {
+    if (low < high) {
+      const mid = Math.floor((low + high) / 2);
+      sort(low, mid);
+      sort(mid + 1, high);
+      merge(low, mid, high);
+    }
+  }
+
+  sort(0, a.length - 1);
+  pushFrame(list, { array: [...a], sorted: a.map((_, idx) => idx), operation: "Merge Sort complete", variables: "All elements sorted", line: -1, comparisons: c, swaps: s, passes: p });
+  return list;
+}
+
+function buildQuickSortFrames(initialArray) {
+  let a = [...initialArray];
+  let list = [];
+  let c = 0, s = 0, p = 0;
+  const sorted = [];
+
+  pushFrame(list, { array: [...a], sorted: [], operation: "Ready for Quick Sort", variables: "—", line: 0, comparisons: c, swaps: s, passes: p });
+
+  function partition(low, high) {
+    p++;
+    const pivot = a[high];
+    let i = low - 1;
+
+    pushFrame(list, {
+      array: [...a],
+      sorted: [...sorted],
+      pivot: high,
+      operation: `Select pivot ${pivot} at index ${high}`,
+      variables: `low = ${low}, high = ${high}, pivot = ${pivot}`,
+      line: 2,
+      comparisons: c,
+      swaps: s,
+      passes: p
+    });
+
+    for (let j = low; j < high; j++) {
+      c++;
+      pushFrame(list, {
+        array: [...a],
+        sorted: [...sorted],
+        pivot: high,
+        compare: [j, high],
+        operation: `Compare A[${j}] (${a[j]}) with pivot ${pivot}`,
+        variables: `j = ${j}, i = ${i}, pivot = ${pivot}`,
+        line: 2,
+        comparisons: c,
+        swaps: s,
+        passes: p
+      });
+
+      if (a[j] < pivot) {
+        i++;
+        if (i !== j) {
+          s++;
+          [a[i], a[j]] = [a[j], a[i]];
+          pushFrame(list, {
+            array: [...a],
+            sorted: [...sorted],
+            pivot: high,
+            swap: [i, j],
+            operation: `Swap A[${i}] and A[${j}] (${a[j]} < pivot)`,
+            variables: `Swapped ${a[j]} and ${a[i]}`,
+            line: 2,
+            comparisons: c,
+            swaps: s,
+            passes: p
+          });
+        }
+      }
+    }
+
+    if (i + 1 !== high) {
+      s++;
+      [a[i + 1], a[high]] = [a[high], a[i + 1]];
+      pushFrame(list, {
+        array: [...a],
+        sorted: [...sorted],
+        swap: [i + 1, high],
+        operation: `Position pivot ${pivot} at index ${i + 1}`,
+        variables: `Pivot locked at index ${i + 1}`,
+        line: 2,
+        comparisons: c,
+        swaps: s,
+        passes: p
+      });
+    }
+
+    sorted.push(i + 1);
+    return i + 1;
+  }
+
+  function sort(low, high) {
+    if (low < high) {
+      const pi = partition(low, high);
+      sort(low, pi - 1);
+      sort(pi + 1, high);
+    } else if (low === high) {
+      sorted.push(low);
+    }
+  }
+
+  sort(0, a.length - 1);
+  pushFrame(list, { array: [...a], sorted: a.map((_, idx) => idx), operation: "Quick Sort complete", variables: "All elements sorted", line: -1, comparisons: c, swaps: s, passes: p });
+  return list;
+}
+
+function buildHeapSortFrames(initialArray) {
+  let a = [...initialArray];
+  let list = [];
+  let c = 0, s = 0, p = 0;
+  const sorted = [];
+
+  pushFrame(list, { array: [...a], sorted: [], operation: "Ready for Heap Sort", variables: "Building Max-Heap", line: 0, comparisons: c, swaps: s, passes: p });
+
+  function heapify(n, i) {
+    let largest = i;
+    const left = 2 * i + 1;
+    const right = 2 * i + 2;
+
+    if (left < n) {
+      c++;
+      pushFrame(list, {
+        array: [...a],
+        sorted: [...sorted],
+        compare: [largest, left],
+        operation: `Compare parent A[${largest}] (${a[largest]}) with left child A[${left}] (${a[left]})`,
+        variables: `i = ${i}, left = ${left}`,
+        line: 3,
+        comparisons: c,
+        swaps: s,
+        passes: p
+      });
+      if (a[left] > a[largest]) {
+        largest = left;
+      }
+    }
+
+    if (right < n) {
+      c++;
+      pushFrame(list, {
+        array: [...a],
+        sorted: [...sorted],
+        compare: [largest, right],
+        operation: `Compare largest A[${largest}] (${a[largest]}) with right child A[${right}] (${a[right]})`,
+        variables: `i = ${i}, right = ${right}`,
+        line: 3,
+        comparisons: c,
+        swaps: s,
+        passes: p
+      });
+      if (a[right] > a[largest]) {
+        largest = right;
+      }
+    }
+
+    if (largest !== i) {
+      s++;
+      [a[i], a[largest]] = [a[largest], a[i]];
+      pushFrame(list, {
+        array: [...a],
+        sorted: [...sorted],
+        swap: [i, largest],
+        operation: `Swap parent ${a[largest]} with larger child ${a[i]}`,
+        variables: `Swapped index ${i} and ${largest}`,
+        line: 3,
+        comparisons: c,
+        swaps: s,
+        passes: p
+      });
+      heapify(n, largest);
+    }
+  }
+
+  for (let i = Math.floor(a.length / 2) - 1; i >= 0; i--) {
+    heapify(a.length, i);
+  }
+
+  pushFrame(list, {
+    array: [...a],
+    sorted: [],
+    operation: "Max-Heap established. Root holds maximum element.",
+    variables: `Heap Root = ${a[0]}`,
+    line: 0,
+    comparisons: c,
+    swaps: s,
+    passes: p
+  });
+
+  for (let i = a.length - 1; i > 0; i--) {
+    p++;
+    s++;
+    [a[0], a[i]] = [a[i], a[0]];
+    sorted.push(i);
+    pushFrame(list, {
+      array: [...a],
+      sorted: [...sorted],
+      swap: [0, i],
+      operation: `Extract max element ${a[i]} to sorted index ${i}`,
+      variables: `Locked ${a[i]} at index ${i}`,
+      line: 2,
+      comparisons: c,
+      swaps: s,
+      passes: p
+    });
+
+    heapify(i, 0);
+  }
+
+  sorted.push(0);
+  pushFrame(list, { array: [...a], sorted: a.map((_, idx) => idx), operation: "Heap Sort complete", variables: "All elements sorted", line: -1, comparisons: c, swaps: s, passes: p });
+  return list;
+}
+
+function buildCountingSortFrames(initialArray) {
+  let a = [...initialArray];
+  let list = [];
+  let c = 0, s = 0, p = 0;
+
+  pushFrame(list, { array: [...a], sorted: [], operation: "Ready for Counting Sort", variables: "—", line: 0, comparisons: c, swaps: s, passes: p });
+
+  const maxVal = Math.max(...a);
+  const count = new Array(maxVal + 1).fill(0);
+
+  for (let i = 0; i < a.length; i++) {
+    p++;
+    count[a[i]]++;
+    pushFrame(list, {
+      array: [...a],
+      compare: [i],
+      operation: `Tally frequency of value ${a[i]}`,
+      variables: `count[${a[i]}] = ${count[a[i]]}`,
+      line: 1,
+      comparisons: c,
+      swaps: s,
+      passes: p
+    });
+  }
+
+  for (let i = 1; i <= maxVal; i++) {
+    count[i] += count[i - 1];
+  }
+
+  pushFrame(list, {
+    array: [...a],
+    operation: "Calculated cumulative prefix frequencies",
+    variables: `Max element = ${maxVal}`,
+    line: 2,
+    comparisons: c,
+    swaps: s,
+    passes: p
+  });
+
+  const output = new Array(a.length);
+  for (let i = a.length - 1; i >= 0; i--) {
+    p++;
+    s++;
+    const val = a[i];
+    const targetIdx = count[val] - 1;
+    output[targetIdx] = val;
+    count[val]--;
+
+    pushFrame(list, {
+      array: [...a],
+      compare: [i],
+      operation: `Place ${val} at designated target index ${targetIdx}`,
+      variables: `output[${targetIdx}] = ${val}`,
+      line: 3,
+      comparisons: c,
+      swaps: s,
+      passes: p
+    });
+  }
+
+  const sorted = [];
+  for (let i = 0; i < a.length; i++) {
+    s++;
+    a[i] = output[i];
+    sorted.push(i);
+    pushFrame(list, {
+      array: [...a],
+      sorted: [...sorted],
+      swap: [i],
+      operation: `Write sorted value ${a[i]} into main array index ${i}`,
+      variables: `A[${i}] = ${a[i]}`,
+      line: 4,
+      comparisons: c,
+      swaps: s,
+      passes: p
+    });
+  }
+
+  pushFrame(list, { array: [...a], sorted: a.map((_, idx) => idx), operation: "Counting Sort complete", variables: "All elements sorted", line: -1, comparisons: c, swaps: s, passes: p });
+  return list;
+}
+
+function buildSearchFrames(type) {
+  let a = type === "binary" ? [...array].sort((x, y) => x - y) : [...array], list = [];
+  let c = 0, p = 0;
+  const target = Number(searchValue.value);
+  pushFrame(list, {
+    array: a,
+    operation: type === "binary" ? "Array sorted for Binary Search" : "Ready for Linear Search",
+    variables: `target = ${target}`,
+    line: 0,
+    comparisons: c,
+    passes: p
+  });
+
+  if (type === "linear") {
+    for (let i = 0; i < a.length; i++) {
+      c++;
+      p++;
+      pushFrame(list, {
+        array: a,
+        compare: [i],
+        operation: `Check A[${i}] (${a[i]}) against target ${target}`,
+        variables: `i = ${i}, target = ${target}`,
+        line: 1,
+        comparisons: c,
+        passes: p
+      });
+      if (a[i] === target) {
+        pushFrame(list, {
+          array: a,
+          found: i,
+          operation: `Target ${target} found at index ${i}!`,
+          variables: `Match at index ${i}`,
+          line: 1,
+          comparisons: c,
+          passes: p
+        });
+        return list;
+      }
+    }
+    pushFrame(list, {
+      array: a,
+      failed: a.map((_, i) => i),
+      operation: `Target ${target} not present in array`,
+      variables: `target = ${target} not found`,
+      line: 2,
+      comparisons: c,
+      passes: p
+    });
+    return list;
+  }
+
+  let left = 0, right = a.length - 1;
+  while (left <= right) {
+    let mid = Math.floor((left + right) / 2);
+    c++;
+    p++;
+    pushFrame(list, {
+      array: a,
+      compare: [mid],
+      operation: `Check midpoint A[${mid}] (${a[mid]})`,
+      variables: `left = ${left}, mid = ${mid}, right = ${right}`,
+      line: 3,
+      comparisons: c,
+      passes: p
+    });
+    if (a[mid] === target) {
+      pushFrame(list, {
+        array: a,
+        found: mid,
+        operation: `Target ${target} found at index ${mid}!`,
+        variables: `Match at index ${mid}`,
+        line: 3,
+        comparisons: c,
+        passes: p
+      });
+      return list;
+    }
+    if (a[mid] < target) {
+      left = mid + 1;
+      pushFrame(list, {
+        array: a,
+        operation: `Target > ${a[mid]} — advance left boundary to ${left}`,
+        variables: `left = ${left}, right = ${right}`,
+        line: 4,
+        comparisons: c,
+        passes: p
+      });
+    } else {
+      right = mid - 1;
+      pushFrame(list, {
+        array: a,
+        operation: `Target < ${a[mid]} — move right boundary to ${right}`,
+        variables: `left = ${left}, right = ${right}`,
+        line: 5,
+        comparisons: c,
+        passes: p
+      });
+    }
+  }
+  pushFrame(list, {
+    array: a,
+    failed: a.map((_, i) => i),
+    operation: `Target ${target} not found in range`,
+    variables: `Search exhausted`,
+    line: 5,
+    comparisons: c,
+    passes: p
+  });
+  return list;
+}
 
 // -------------------------------------------------------------
 // BFS & DFS Frame Generators
@@ -656,12 +1526,9 @@ function buildBFSFrames() {
   let step = 0;
 
   pushFrame(list, {
-    graph: {
-      nodeStates: { ...nodeStates },
-      edgeStates: { ...edgeStates }
-    },
+    graph: { nodeStates: { ...nodeStates }, edgeStates: { ...edgeStates } },
     operation: `Initialize BFS at Start Node ${startNode.label}. Queue is empty.`,
-    variables: `Queue: [] | Visited: []`,
+    variables: "Queue: [] | Visited: []",
     line: 0,
     comparisons: edgeChecks,
     swaps: visitedCount,
@@ -675,10 +1542,7 @@ function buildBFSFrames() {
 
   step++;
   pushFrame(list, {
-    graph: {
-      nodeStates: { ...nodeStates },
-      edgeStates: { ...edgeStates }
-    },
+    graph: { nodeStates: { ...nodeStates }, edgeStates: { ...edgeStates } },
     operation: `Enqueued start node ${startNode.label} (Queued: Violet).`,
     variables: `Queue: [${startNode.label}] | Visited: []`,
     line: 0,
@@ -696,13 +1560,10 @@ function buildBFSFrames() {
 
     step++;
     pushFrame(list, {
-      graph: {
-        nodeStates: { ...nodeStates },
-        edgeStates: { ...edgeStates }
-      },
+      graph: { nodeStates: { ...nodeStates }, edgeStates: { ...edgeStates } },
       operation: `Dequeued node ${getNodeLabel(u)} (Current: Cyan). Inspecting adjacent edges.`,
       variables: `Current: ${getNodeLabel(u)} | Queue: [${queue.map(id => getNodeLabel(id)).join(", ")}] | Visited: [${Array.from(visited).map(id => getNodeLabel(id)).join(", ")}]`,
-      line: 3,
+      line: 2,
       comparisons: edgeChecks,
       swaps: visitedCount,
       passes: step
@@ -725,13 +1586,10 @@ function buildBFSFrames() {
 
       step++;
       pushFrame(list, {
-        graph: {
-          nodeStates: { ...nodeStates },
-          edgeStates: { ...edgeStates }
-        },
+        graph: { nodeStates: { ...nodeStates }, edgeStates: { ...edgeStates } },
         operation: `Checking edge (${getNodeLabel(u)}, ${getNodeLabel(v)}). Neighbor ${getNodeLabel(v)} is Exploring (Amber).`,
-        variables: `Examining edge: ${getNodeLabel(u)} -> ${getNodeLabel(v)} | Queue: [${queue.map(id => getNodeLabel(id)).join(", ")}]`,
-        line: 4,
+        variables: `Edge: ${getNodeLabel(u)} -> ${getNodeLabel(v)} | Queue: [${queue.map(id => getNodeLabel(id)).join(", ")}]`,
+        line: 3,
         comparisons: edgeChecks,
         swaps: visitedCount,
         passes: step
@@ -745,13 +1603,10 @@ function buildBFSFrames() {
 
         step++;
         pushFrame(list, {
-          graph: {
-            nodeStates: { ...nodeStates },
-            edgeStates: { ...edgeStates }
-          },
+          graph: { nodeStates: { ...nodeStates }, edgeStates: { ...edgeStates } },
           operation: `Neighbor ${getNodeLabel(v)} is unvisited. Enqueued ${getNodeLabel(v)} (Queued: Violet), marked edge as Traversed (Magenta).`,
           variables: `Queue: [${queue.map(id => getNodeLabel(id)).join(", ")}] | Visited: [${Array.from(visited).map(id => getNodeLabel(id)).join(", ")}]`,
-          line: 6,
+          line: 5,
           comparisons: edgeChecks,
           swaps: visitedCount,
           passes: step
@@ -762,13 +1617,10 @@ function buildBFSFrames() {
 
         step++;
         pushFrame(list, {
-          graph: {
-            nodeStates: { ...nodeStates },
-            edgeStates: { ...edgeStates }
-          },
+          graph: { nodeStates: { ...nodeStates }, edgeStates: { ...edgeStates } },
           operation: `Neighbor ${getNodeLabel(v)} already ${isVisited ? "visited" : "in queue"}. Skip edge.`,
           variables: `Queue: [${queue.map(id => getNodeLabel(id)).join(", ")}] | Visited: [${Array.from(visited).map(id => getNodeLabel(id)).join(", ")}]`,
-          line: 5,
+          line: 4,
           comparisons: edgeChecks,
           swaps: visitedCount,
           passes: step
@@ -779,11 +1631,8 @@ function buildBFSFrames() {
     nodeStates[u] = "visited";
     step++;
     pushFrame(list, {
-      graph: {
-        nodeStates: { ...nodeStates },
-        edgeStates: { ...edgeStates }
-      },
-      operation: `Finished all neighbors of node ${getNodeLabel(u)}. Node marked as Visited (Green).`,
+      graph: { nodeStates: { ...nodeStates }, edgeStates: { ...edgeStates } },
+      operation: `Finished all neighbors of node ${getNodeLabel(u)}. Marked as Visited (Green).`,
       variables: `Queue: [${queue.map(id => getNodeLabel(id)).join(", ")}] | Visited: [${Array.from(visited).map(id => getNodeLabel(id)).join(", ")}]`,
       line: 2,
       comparisons: edgeChecks,
@@ -794,10 +1643,7 @@ function buildBFSFrames() {
 
   step++;
   pushFrame(list, {
-    graph: {
-      nodeStates: { ...nodeStates },
-      edgeStates: { ...edgeStates }
-    },
+    graph: { nodeStates: { ...nodeStates }, edgeStates: { ...edgeStates } },
     operation: `BFS Traversal complete! Visited ${visited.size} node${visited.size === 1 ? "" : "s"}.`,
     variables: `Queue: [] | Visited: [${Array.from(visited).map(id => getNodeLabel(id)).join(", ")}]`,
     line: -1,
@@ -828,12 +1674,9 @@ function buildDFSFrames() {
   let step = 0;
 
   pushFrame(list, {
-    graph: {
-      nodeStates: { ...nodeStates },
-      edgeStates: { ...edgeStates }
-    },
+    graph: { nodeStates: { ...nodeStates }, edgeStates: { ...edgeStates } },
     operation: `Initialize DFS at Start Node ${startNode.label}. Call stack is empty.`,
-    variables: `Stack: [] | Visited: []`,
+    variables: "Stack: [] | Visited: []",
     line: 0,
     comparisons: edgeChecks,
     swaps: visitedCount,
@@ -855,10 +1698,7 @@ function buildDFSFrames() {
 
     step++;
     pushFrame(list, {
-      graph: {
-        nodeStates: { ...nodeStates },
-        edgeStates: { ...edgeStates }
-      },
+      graph: { nodeStates: { ...nodeStates }, edgeStates: { ...edgeStates } },
       operation: `Exploring node ${getNodeLabel(u)} (Current: Cyan). Added to Call Stack.`,
       variables: `Current: ${getNodeLabel(u)} | Stack: [${stack.map(id => getNodeLabel(id)).join(", ")}] | Visited: [${Array.from(visited).map(id => getNodeLabel(id)).join(", ")}]`,
       line: 1,
@@ -883,12 +1723,9 @@ function buildDFSFrames() {
 
       step++;
       pushFrame(list, {
-        graph: {
-          nodeStates: { ...nodeStates },
-          edgeStates: { ...edgeStates }
-        },
+        graph: { nodeStates: { ...nodeStates }, edgeStates: { ...edgeStates } },
         operation: `Checking edge (${getNodeLabel(u)}, ${getNodeLabel(v)}). Neighbor ${getNodeLabel(v)} is Exploring (Amber).`,
-        variables: `Examining edge: ${getNodeLabel(u)} -> ${getNodeLabel(v)} | Stack: [${stack.map(id => getNodeLabel(id)).join(", ")}]`,
+        variables: `Examining: ${getNodeLabel(u)} -> ${getNodeLabel(v)} | Stack: [${stack.map(id => getNodeLabel(id)).join(", ")}]`,
         line: 2,
         comparisons: edgeChecks,
         swaps: visitedCount,
@@ -900,10 +1737,7 @@ function buildDFSFrames() {
 
         step++;
         pushFrame(list, {
-          graph: {
-            nodeStates: { ...nodeStates },
-            edgeStates: { ...edgeStates }
-          },
+          graph: { nodeStates: { ...nodeStates }, edgeStates: { ...edgeStates } },
           operation: `Neighbor ${getNodeLabel(v)} is unvisited. Preparing to branch into ${getNodeLabel(v)} (Queued: Violet).`,
           variables: `Branching to: ${getNodeLabel(v)} | Stack: [${stack.map(id => getNodeLabel(id)).join(", ")}]`,
           line: 3,
@@ -917,11 +1751,8 @@ function buildDFSFrames() {
         nodeStates[u] = "current";
         step++;
         pushFrame(list, {
-          graph: {
-            nodeStates: { ...nodeStates },
-            edgeStates: { ...edgeStates }
-          },
-          operation: `Backtracked to node ${getNodeLabel(u)} (Current: Cyan) from finished branch ${getNodeLabel(v)}.`,
+          graph: { nodeStates: { ...nodeStates }, edgeStates: { ...edgeStates } },
+          operation: `Backtracked to node ${getNodeLabel(u)} (Current: Cyan) from branch ${getNodeLabel(v)}.`,
           variables: `Current: ${getNodeLabel(u)} | Stack: [${stack.map(id => getNodeLabel(id)).join(", ")}]`,
           line: 4,
           comparisons: edgeChecks,
@@ -934,10 +1765,7 @@ function buildDFSFrames() {
 
         step++;
         pushFrame(list, {
-          graph: {
-            nodeStates: { ...nodeStates },
-            edgeStates: { ...edgeStates }
-          },
+          graph: { nodeStates: { ...nodeStates }, edgeStates: { ...edgeStates } },
           operation: `Neighbor ${getNodeLabel(v)} already visited. Backtracking/skipping edge (${getNodeLabel(u)}, ${getNodeLabel(v)}).`,
           variables: `Stack: [${stack.map(id => getNodeLabel(id)).join(", ")}] | Visited: [${Array.from(visited).map(id => getNodeLabel(id)).join(", ")}]`,
           line: 2,
@@ -953,10 +1781,7 @@ function buildDFSFrames() {
 
     step++;
     pushFrame(list, {
-      graph: {
-        nodeStates: { ...nodeStates },
-        edgeStates: { ...edgeStates }
-      },
+      graph: { nodeStates: { ...nodeStates }, edgeStates: { ...edgeStates } },
       operation: `Finished all branches for node ${getNodeLabel(u)}. Marked as Visited (Green) and popped from Call Stack.`,
       variables: `Stack: [${stack.map(id => getNodeLabel(id)).join(", ")}] | Visited: [${Array.from(visited).map(id => getNodeLabel(id)).join(", ")}]`,
       line: 4,
@@ -970,10 +1795,7 @@ function buildDFSFrames() {
 
   step++;
   pushFrame(list, {
-    graph: {
-      nodeStates: { ...nodeStates },
-      edgeStates: { ...edgeStates }
-    },
+    graph: { nodeStates: { ...nodeStates }, edgeStates: { ...edgeStates } },
     operation: `DFS Traversal complete! Visited ${visited.size} node${visited.size === 1 ? "" : "s"}.`,
     variables: `Stack: [] | Visited: [${Array.from(visited).map(id => getNodeLabel(id)).join(", ")}]`,
     line: -1,
@@ -985,20 +1807,31 @@ function buildDFSFrames() {
   return list;
 }
 
+// -------------------------------------------------------------
+// Frame Generator Dispatcher
+// -------------------------------------------------------------
 function buildFrames() {
-  if (currentAlgorithm === "bfs") {
+  const a = [...array];
+  if (currentAlgorithm === "bubble") {
+    frames = buildBubbleSortFrames(a);
+  } else if (currentAlgorithm === "selection") {
+    frames = buildSelectionSortFrames(a);
+  } else if (currentAlgorithm === "insertion") {
+    frames = buildInsertionSortFrames(a);
+  } else if (currentAlgorithm === "merge") {
+    frames = buildMergeSortFrames(a);
+  } else if (currentAlgorithm === "quick") {
+    frames = buildQuickSortFrames(a);
+  } else if (currentAlgorithm === "heap") {
+    frames = buildHeapSortFrames(a);
+  } else if (currentAlgorithm === "counting") {
+    frames = buildCountingSortFrames(a);
+  } else if (currentAlgorithm === "linear" || currentAlgorithm === "binary") {
+    frames = buildSearchFrames(currentAlgorithm);
+  } else if (currentAlgorithm === "bfs") {
     frames = buildBFSFrames();
   } else if (currentAlgorithm === "dfs") {
     frames = buildDFSFrames();
-  } else if (
-    currentAlgorithm.includes("sort") ||
-    currentAlgorithm === "bubble" ||
-    currentAlgorithm === "selection" ||
-    currentAlgorithm === "insertion"
-  ) {
-    frames = buildSortFrames(currentAlgorithm.replace(" Sort", ""));
-  } else if (currentAlgorithm === "linear" || currentAlgorithm === "binary") {
-    frames = buildSearchFrames(currentAlgorithm);
   }
   frameIndex = 0;
   if (frames.length > 0) {
@@ -1009,16 +1842,26 @@ function buildFrames() {
 function applyFrame(i) {
   frameIndex = Math.max(0, Math.min(i, frames.length - 1));
   updateExecution(frames[frameIndex]);
-  if (frameIndex === frames.length - 1) setStatus("Complete", "done");
-  else if (frameIndex > 0) setStatus("Paused", "running");
-  else setStatus("Ready");
+  if (frameIndex === frames.length - 1) {
+    setStatus("Complete", "done");
+    startButton.textContent = "Start";
+  } else if (frameIndex > 0) {
+    setStatus("Paused", "running");
+    startButton.textContent = "Resume";
+  } else {
+    setStatus("Ready");
+    startButton.textContent = "Start";
+  }
 }
 
 async function play() {
   if (isPlaying) return;
-  if (!frames.length) buildFrames();
+  if (!frames.length || frameIndex >= frames.length - 1) {
+    buildFrames();
+  }
   isPlaying = true;
   setStatus("Running", "running");
+  startButton.textContent = "Running";
   startButton.disabled = true;
 
   while (isPlaying && frameIndex < frames.length - 1) {
@@ -1030,8 +1873,10 @@ async function play() {
   if (frameIndex >= frames.length - 1) {
     isPlaying = false;
     setStatus("Complete", "done");
+    startButton.textContent = "Start";
   } else if (!isPlaying) {
     setStatus("Paused", "running");
+    startButton.textContent = "Resume";
   }
   startButton.disabled = false;
 }
@@ -1039,6 +1884,7 @@ async function play() {
 function pause() {
   isPlaying = false;
   setStatus("Paused", "running");
+  startButton.textContent = "Resume";
   startButton.disabled = false;
 }
 
@@ -1047,6 +1893,7 @@ function resetVisualization() {
   resetStats();
   frames = [];
   frameIndex = 0;
+  startButton.textContent = "Start";
 
   if (currentAlgorithm === "bfs" || currentAlgorithm === "dfs") {
     renderGraph();
@@ -1063,6 +1910,7 @@ function generateData() {
   resetStats();
   frames = [];
   frameIndex = 0;
+  startButton.textContent = "Start";
 
   if (currentAlgorithm === "bfs" || currentAlgorithm === "dfs") {
     generateRandomGraph();
@@ -1091,21 +1939,22 @@ function setAlgorithm(name) {
   graphContainer.classList.toggle("hidden", !isGraph);
 
   if (isGraph) {
-    generateButton.textContent = "Generate Random Graph";
+    generateButton.textContent = "Randomise Graph";
     if (stat1Title) stat1Title.textContent = "Edge Checks";
     if (stat2Title) stat2Title.textContent = "Visited Nodes";
     if (stat3Title) stat3Title.textContent = "Steps";
     populateStartSelect();
   } else {
-    generateButton.textContent = "Generate Data";
+    generateButton.textContent = "Generate";
     if (stat1Title) stat1Title.textContent = "Comparisons";
-    if (stat2Title) stat2Title.textContent = "Swaps";
+    if (stat2Title) stat2Title.textContent = "Swaps / Writes";
     if (stat3Title) stat3Title.textContent = "Passes / Steps";
   }
 
   array = name === "binary" ? [4, 8, 13, 19, 24, 29, 34, 41, 45, 49] : [5, 3, 8, 4, 2, 9, 7, 1, 6, 10];
   frames = [];
   frameIndex = 0;
+  startButton.textContent = "Start";
   resetStats();
 
   if (isGraph) {
@@ -1121,16 +1970,14 @@ function setAlgorithm(name) {
 // Event Listeners
 // -------------------------------------------------------------
 startButton.addEventListener("click", () => {
-  if (frameIndex >= frames.length - 1 || !frames.length) buildFrames();
-  play();
+  if (isPlaying) {
+    pause();
+  } else {
+    play();
+  }
 });
 
 pauseButton.addEventListener("click", pause);
-
-prevButton.addEventListener("click", () => {
-  pause();
-  applyFrame(frameIndex - 1);
-});
 
 nextButton.addEventListener("click", () => {
   pause();
@@ -1151,7 +1998,6 @@ searchValue.addEventListener("change", () => {
   if (!isPlaying && frames.length) buildFrames();
 });
 
-// Graph Toolbar Button Events
 graphToolButtons.forEach(btn => {
   btn.addEventListener("click", () => {
     graphToolButtons.forEach(b => b.classList.remove("active"));
@@ -1209,7 +2055,8 @@ if (graphClearBtn) {
   });
 }
 
-// Initial Initialization
+// Initialize Application
+initTheme();
 updateInfo();
 renderArray();
 populateStartSelect();
