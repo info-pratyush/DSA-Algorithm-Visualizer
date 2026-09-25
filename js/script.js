@@ -3,9 +3,36 @@ let array = [5, 3, 8, 4, 2];
 const container = document.getElementById("array-container");
 const generateButton = document.getElementById("generate-btn");
 const startButton = document.getElementById("start-btn");
+const speedSlider = document.getElementById("speed");
+const speedValue = document.getElementById("speed-value");
+const resetButton = document.getElementById("reset-btn");
+
 
 let sortedCount = 0;
 let isSorting = false;
+
+let comparisons = 0;
+let swaps = 0;
+let passes = 0;
+
+let animationSpeed = 600;
+
+const comparisonDisplay = document.getElementById("comparisons");
+
+const swapDisplay = document.getElementById("swaps");
+
+const passDisplay = document.getElementById("passes");
+
+
+
+// Update statistics on the page
+function updateStats() {
+
+    comparisonDisplay.textContent = comparisons;
+    swapDisplay.textContent = swaps;
+    passDisplay.textContent = passes;
+}
+
 
 
 // -----------------------------
@@ -62,9 +89,31 @@ function generateArray() {
 
     sortedCount = 0;
 
+    comparisons = 0;
+    swaps = 0;
+    passes = 0;
+
+    updateStats();
+
     renderArray();
 }
 
+function resetVisualization() {
+    if (isSorting) {
+        return;
+    }
+
+    array = [5, 3, 8, 4, 2];
+
+    sortedCount = 0;
+
+    comparisons = 0;
+    swaps = 0;
+    passes = 0;
+
+    updateStats();
+    renderArray();
+}
 
 // -----------------------------
 // Delay Function
@@ -89,6 +138,11 @@ async function bubbleSortVisualization() {
     }
 
     isSorting = true;
+    comparisons = 0;
+    swaps = 0;
+    passes = 0;
+
+    updateStats();
 
     startButton.disabled = true;
     generateButton.disabled = true;
@@ -106,6 +160,9 @@ async function bubbleSortVisualization() {
 
         for (let j = 0; j < array.length - i - 1; j++) {
 
+            comparisons++;
+            updateStats();
+
             let bars = container.children;
 
 
@@ -113,13 +170,16 @@ async function bubbleSortVisualization() {
             bars[j].classList.add("comparing");
             bars[j + 1].classList.add("comparing");
 
-            await delay(600);
+            await delay(animationSpeed);
 
 
             // Compare values
             if (array[j] > array[j + 1]) {
 
                 swapped = true;
+
+                swaps++;
+                updateStats();
 
                 // Remove comparison highlight
                 bars[j].classList.remove("comparing");
@@ -137,13 +197,13 @@ async function bubbleSortVisualization() {
                 bars[j].classList.add("swapping");
                 bars[j + 1].classList.add("swapping");
 
-                await delay(300);
+                await delay(animationSpeed / 2);
 
 
                 // Redraw
                 renderArray();
 
-                await delay(300);
+                await delay(animationSpeed / 2);
 
             } else {
 
@@ -157,9 +217,14 @@ async function bubbleSortVisualization() {
         // One more element is now sorted
         sortedCount++;
 
+        sortedCount++;
+        passes++;
+        updateStats();
+
+
         renderArray();
 
-        await delay(500);
+        await delay(animationSpeed / 2);
 
 
         // Optimization:
@@ -187,15 +252,19 @@ async function bubbleSortVisualization() {
 // Button Events
 // -----------------------------
 
-generateButton.addEventListener(
-    "click",
-    generateArray
-);
+generateButton.addEventListener("click",generateArray);
 
-startButton.addEventListener(
-    "click",
-    bubbleSortVisualization
-);
+startButton.addEventListener("click", bubbleSortVisualization);
+
+resetButton.addEventListener("click", resetVisualization);
+
+speedSlider.addEventListener("input", function () {
+
+    animationSpeed = Number(speedSlider.value);
+
+    speedValue.textContent =
+        `${animationSpeed} ms`;
+});
 
 
 // -----------------------------

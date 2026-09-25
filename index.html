@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DSA Algorithm Visualizer</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
+
 <body>
   <header>
     <h1>DSA Algorithm Visualizer</h1>
@@ -13,27 +15,27 @@
   </header>
 
   <main class="dashboard">
-  
-     <aside class="sidebar">
-       <h2>Algorithms</h2>
 
-       <h3>Sorting</h3>
+    <aside class="sidebar">
+      <h2>Algorithms</h2>
 
-       <button>Bubble Sort</button>
-       <button>Selection Sort</button>
-       <button>Insertion Sort</button>
+      <h3>Sorting</h3>
 
-       <h3>Searching</h3>
+      <button>Bubble Sort</button>
+      <button>Selection Sort</button>
+      <button>Insertion Sort</button>
 
-       <button>Linear Search</button>
-       <button>Binary Search</button>
+      <h3>Searching</h3>
 
-       <h3>Graphs</h3>
+      <button>Linear Search</button>
+      <button>Binary Search</button>
 
-        <button>BFS</button>
-        <button>DFS</button>
-        
-     </aside>
+      <h3>Graphs</h3>
+
+      <button>BFS</button>
+      <button>DFS</button>
+
+    </aside>
 
     <section class="visualizer">
 
@@ -46,13 +48,104 @@
       <div class="controls">
         <button id="generate-btn">Generate Array</button>
         <button id="start-btn">Start Visualization</button>
+        <button id="reset-btn">Reset</button>
+
+        <div class="speed-control">
+          <label for="speed">Animation Delay</label>
+
+          <input type="range" id="speed" min="100" max="1000" value="600" step="100">
+
+          <span id="speed-value">600 ms</span>
+        </div>
+
       </div>
 
-    </section> 
+      <div class="stats">
+        <div>
+          <span>Comparisons</span>
+          <strong id="comparisons">0</strong>
+        </div>
+
+        <div>
+          <span>Swaps</span>
+          <strong id="swaps">0</strong>
+        </div>
+
+        <div>
+          <span>Passes</span>
+          <strong id="passes">0</strong>
+        </div>
+      </div>
+
+      <div class="algorithm-info">
+
+        <h2>Bubble Sort</h2>
+
+        <p>
+          Bubble Sort is a simple sorting algorithm that repeatedly
+          compares adjacent elements and swaps them if they are in
+          the wrong order.
+        </p>
+
+        <h3>How It Works</h3>
+
+        <ol>
+          <li>Compare two adjacent elements.</li>
+          <li>If the left element is greater, swap them.</li>
+          <li>Continue through the array.</li>
+          <li>After each pass, the largest unsorted element moves to the end.</li>
+          <li>Repeat until the array is sorted.</li>
+        </ol>
+
+        <h3>Pseudocode</h3>
+
+        <pre class="pseudocode"><code>
+        for i = 0 to n - 1
+            swapped = false
+
+            for j = 0 to n - i - 2
+              if array[j] > array[j + 1]
+              swap(array[j], array[j + 1])
+              swapped = true
+
+    if swapped == false
+        break
+</code></pre>
+
+
+        <h3>Complexity</h3>
+
+        <div class="complexity">
+          <div>
+            <span>Best Case</span>
+            <strong>O(n)</strong>
+          </div>
+
+          <div>
+            <span>Average Case</span>
+            <strong>O(n²)</strong>
+          </div>
+
+          <div>
+            <span>Worst Case</span>
+            <strong>O(n²)</strong>
+          </div>
+
+          <div>
+            <span>Space</span>
+            <strong>O(1)</strong>
+          </div>
+        </div>
+
+      </div>
+
+
+    </section>
   </main>
 
 
 
   <script src="js/script.js"></script>
 </body>
+
 </html>
